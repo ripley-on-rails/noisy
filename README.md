@@ -4,7 +4,6 @@ TODO
 
 ## Usage
 
-
 ### Paint Noise
 
 ``` clojure
@@ -23,6 +22,27 @@ TODO
 ```
 
 ![](doc/scaled_noise.png)
+
+### Perlin Noise
+
+```clojure
+(c/paint (-> (c/perlin (c/murmur-random-generator) c/fade1)
+             (c/scale 10)) 200 200)
+```
+
+```clojure
+(c/paint (-> (c/perlin (c/murmur-random-generator) c/fade1)
+             (c/scale 100)) 200 200)
+```
+
+```clojure
+(c/paint (-> (c/perlin (c/murmur-random-generator) c/linear-interpolation)
+             (c/scale 100)) 200 200)
+```
+
+![Perlin Noise](doc/perlin_noise.png)
+![Close-up](doc/perlin_closeup.png)
+![Perlin Noise using linear interpolation... Yikes!](doc/perlin_linear.png)
 
 ## License
 
