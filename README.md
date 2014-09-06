@@ -28,23 +28,31 @@ TODO
 
 ### Perlin Noise
 
+#### Generic example
+
 ```clojure
 (c/paint (-> (c/perlin (c/murmur-random-generator) c/fade1)
              (c/scale 10)) 200 200)
 ```
 
+![Perlin Noise](doc/perlin_noise.png)
+
+#### Close-up
+
 ```clojure
 (c/paint (-> (c/perlin (c/murmur-random-generator) c/fade1)
              (c/scale 100)) 200 200)
 ```
+
+![Close-up](doc/perlin_closeup.png)
+
+#### Linear Interpolation (Yikes!)
 
 ```clojure
 (c/paint (-> (c/perlin (c/murmur-random-generator) c/linear-interpolation)
              (c/scale 100)) 200 200)
 ```
 
-![Perlin Noise](doc/perlin_noise.png)
-![Close-up](doc/perlin_closeup.png)
 ![Perlin Noise using linear interpolation... Yikes!](doc/perlin_linear.png)
 
 ## License
