@@ -106,14 +106,39 @@
   (let [j (int (* 128 (inc i)))]
     (.getRGB (Color. j j j))))
 
-(defn paint [generator width height & opts]
+(defn paint1d [generator width height &
+               {:keys [file grid] :or {file "image.png"}}]
   {:pre [width height generator]}
-  (let [file-name (or (first opts) "image.png")
-        image (BufferedImage. width height BufferedImage/TYPE_INT_ARGB)]
+  (let [image (BufferedImage. width height BufferedImage/TYPE_INT_ARGB)
+        g2 (.createGraphics image)]
+    (.setColor g2 Color/BLACK)
+    (.fillRect g2 0 0 width height)
+    (.setColor g2 (Color. 160 255 32))
+    (doseq [x (range width)]
+      (let [value (* height (/ (inc (generator x)) 2))]
+        (.drawLine g2 x value x height)))
+    (when grid
+      (.setColor g2 (Color. 255 128 0 128))
+      (doseq [x (range 0 width grid)]
+        (.drawLine g2 x 0 x height))
+      (.drawLine g2 0 (/ height 2) width (/ height 2)))
+    (ImageIO/write image "png" (File. file))))
+
+(defn paint2d [generator width height &
+               {:keys [file grid] :or {file "image.png"}}]
+  {:pre [width height generator]}
+  (let [image (BufferedImage. width height BufferedImage/TYPE_INT_ARGB)
+        g2 (.createGraphics image)]
     (doseq [x (range width)
             y (range height)]
-      (.setRGB image x y (gray (generator x y))))
-    (ImageIO/write image "png" (File. file-name))))
+      (.setRGB image x y (gray (generator x y 15))))
+    (when grid
+      (.setColor g2 (Color. 255 128 0 128))
+      (doseq [x (range 0 width grid)]
+        (.drawLine g2 x 0 x height))
+      (doseq [y (range 0 height grid)]
+        (.drawLine g2 0 y width y)))
+    (ImageIO/write image "png" (File. file))))
 
 #_
 (
