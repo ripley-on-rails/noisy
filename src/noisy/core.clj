@@ -131,7 +131,7 @@
         g2 (.createGraphics image)]
     (doseq [x (range width)
             y (range height)]
-      (.setRGB image x y (gray (generator x y 15))))
+      (.setRGB image x y (gray (generator x y))))
     (when grid
       (.setColor g2 (Color. 255 128 0 128))
       (doseq [x (range 0 width grid)]
@@ -139,6 +139,7 @@
       (doseq [y (range 0 height grid)]
         (.drawLine g2 0 y width y)))
     (ImageIO/write image "png" (File. file))))
+
 
 #_
 (
