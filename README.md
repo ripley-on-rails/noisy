@@ -52,6 +52,13 @@ TODO
 
 ![Perlin Noise](doc/perlin_noise.png)
 
+```clojure
+(c/paint1d (-> (c/perlin (c/murmur-random-generator) c/fade1)
+               (c/scale 40)) 400 100)
+```
+
+![](doc/perlin_noise_1d.png)
+
 #### Close-up
 
 ```clojure
@@ -65,10 +72,17 @@ TODO
 
 ```clojure
 (c/paint2d (-> (c/perlin (c/murmur-random-generator) c/linear-interpolation)
-               (c/scale 100)) 200 200)
+               (c/scale 10)) 200 200)
 ```
 
 ![Perlin Noise using linear interpolation... Yikes!](doc/perlin_linear.png)
+
+```clojure
+(c/paint1d (-> (c/perlin (c/murmur-random-generator) c/linear-interpolation)
+               (c/scale 40)) 400 100)
+```
+
+![](doc/perlin_linear_1d.png)
 
 ## Utilities
 
@@ -87,6 +101,14 @@ TODO
 ```
 
 ![](doc/grid1d.png)
+
+## TODOs
+ - Add caching middleware
+ - Add tiling
+ - Add offset
+ - Add paint3d:
+   - export depth many images
+   - export to animated GIF(?)
 
 ## License
 
