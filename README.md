@@ -15,11 +15,14 @@ TODO
 
 ### Scale Noise
 
+
 ```clojure
 (c/paint (-> (c/murmur-random-generator)
              (c/floor)
-             (c/scale 10)) 200 200)
+             (c/scale )) 200 200)
 ```
+
+... Minecraft anyone?
 
 ![](doc/scaled_noise.png)
 
