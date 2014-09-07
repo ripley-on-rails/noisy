@@ -43,6 +43,23 @@
        (gradients (mod (apply prng coords)
                       gradient-count)))))
 
+(defn permutation-table [& {:keys [seed table-size]
+                            :or {seed 0
+                                 table-size 256}}]
+  (let [rnd (java.util.Random. seed)]
+    (loop [src (vec (range table-size))
+           dst []]
+      (if (seq src)
+        (let [i (.nextInt rnd (count src))]
+          (recur (vec (concat (take i src)
+                              (drop (inc i) src)))
+                 (conj dst (nth src i))))
+        (vec (concat dst dst))))))
+
+(defn rotate [n s]
+  (let [[front back] (split-at (mod n (count s)) s)]
+    (vec (concat back front))))
+
 (def p
   (let [p' [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,
             103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,
@@ -77,9 +94,6 @@
        (if (zero? (bit-and h 2))
          v
          (- v)))))
-
-#_ (defn improved-perlin-grad-provider
-  )
 
 ;;; generators
 (defn sample-coordinates [lower]
@@ -122,76 +136,87 @@
             val))))))
 
 ; ported from http://mrl.nyu.edu/~perlin/noise/
-(defn perlin2 [curve-fn]
-  (fn [x y z]
-    (let [x' (bit-and (int (math/floor x)) 255)
-          y' (bit-and (int (math/floor y)) 255)
-          z' (bit-and (int (math/floor z)) 255)
-          x (- x (math/floor x))
-          y (- y (math/floor y))
-          z (- z (math/floor z))
-          u (curve-fn x)
-          v (curve-fn y)
-          w (curve-fn z)
-          a (+ (p x') y')
-          aa (+ (p a) z')
-          ab (+ (p (inc a)) z')
-          b (+ (p (inc x')) y')
-          ba (+ (p b) z')
-          bb (+ (p (inc b)) z')]
-      (linear-interpolation
-       w
-       (linear-interpolation
-        v
-        (linear-interpolation u
-                              (grad (p aa) x y z)
-                              (grad (p ba) (dec x) y z)
-                              )
-        (linear-interpolation u
-                              (grad (p ab) x (dec y) z)
-                              (grad (p bb) (dec x) (dec y) z)))
-       (linear-interpolation
-        v
-        (linear-interpolation u
-                              (grad (p (inc aa)) x y (dec z))
-                              (grad (p (inc ba)) (dec x) y (dec z)))
-        (linear-interpolation u
-                              (grad (p (inc ab)) x (dec y) (dec z))
-                              (grad (p (inc bb)) (dec x) (dec y) (dec z))))))))
+(defn perlin [& {:keys [curve-fn seed] :or {curve-fn fade2}}]
+  (let [table (if seed
+                (permutation-table :seed seed)
+                p)]
+    (fn [x y z]
+      (let [x' (bit-and (int (math/floor x)) 255)
+            y' (bit-and (int (math/floor y)) 255)
+            z' (bit-and (int (math/floor z)) 255)
+            x (- x (math/floor x))
+            y (- y (math/floor y))
+            z (- z (math/floor z))
+            u (curve-fn x)
+            v (curve-fn y)
+            w (curve-fn z)
+            a (+ (table x') y')
+            aa (+ (table a) z')
+            ab (+ (table (inc a)) z')
+            b (+ (table (inc x')) y')
+            ba (+ (table b) z')
+            bb (+ (table (inc b)) z')]
+        (linear-interpolation
+         w
+         (linear-interpolation
+          v
+          (linear-interpolation u
+                                (grad (table aa) x y z)
+                                (grad (table ba) (dec x) y z)
+                                )
+          (linear-interpolation u
+                                (grad (table ab) x (dec y) z)
+                                (grad (table bb) (dec x) (dec y) z)))
+         (linear-interpolation
+          v
+          (linear-interpolation u
+                                (grad (table (inc aa)) x y (dec z))
+                                (grad (table (inc ba)) (dec x) y (dec z)))
+          (linear-interpolation u
+                                (grad (table (inc ab)) x (dec y) (dec z))
+                                (grad (table (inc bb)) (dec x) (dec y) (dec z)))))))))
 
 (defn dot-prod [a b]
   (apply + (map * a b)))
 
-(defn perlin [gradients-gen curve-fn]
-  (fn [& coords]
-    (let [lower (map (comp int math/floor) coords)
-          fractionals (map - coords lower)
-          curves (map curve-fn fractionals)
-          samples (sample-coordinates lower)
-          ;; the samples are ordered like so:
-          ;; (c/sample-coordinates [0 0 0])
-          ;; ([0 0 0] [1 0 0] [0 1 0] [1 1 0] [0 0 1] [1 0 1] [0 1 1] [1 1 1])
-          ;; therefore we can partion into 2 for each axis during
-          ;; the interpolation steps... pretty clever
-          gradients (map (fn [sample]
-                           (let [fractionals' (map +
-                                                   fractionals
-                                                   (map - lower sample))]
-                             (/
-                              (dot-prod
-                               fractionals'
-                               (apply gradients-gen sample))
-                              1)))
-                         samples)]
-      (loop [[curve & curves'] curves
-             grads gradients]
-        (let [groups (partition 2 grads)
-              grads' (map (partial apply linear-interpolation curve)
-                          groups)]
-          (if (seq curves')
-            (recur curves'
-                   grads')
-            (first grads')))))))
+(defn perlin-rnd [& opts]
+  (let [{:keys [curve-fn seed cache]
+         :or {seed 0
+              curve-fn fade2}} opts
+        grad-gen' (murmur-gradient-generator :seed seed)
+        {:keys [grad-gen]
+         :or {grad-gen (if cache
+                         (make-cache-fn grad-gen' cache)
+                         grad-gen')}} opts]
+    (fn [& coords]
+      (let [lower (map (comp int math/floor) coords)
+            fractionals (map - coords lower)
+            curves (map curve-fn fractionals)
+            samples (sample-coordinates lower)
+            ;; the samples are ordered like so:
+            ;; (c/sample-coordinates [0 0 0])
+            ;; ([0 0 0] [1 0 0] [0 1 0] [1 1 0] [0 0 1] [1 0 1] [0 1 1] [1 1 1])
+            ;; therefore we can partion into 2 for each axis during
+            ;; the interpolation steps... pretty clever
+            gradients (map (fn [sample]
+                             (let [fractionals' (map +
+                                                     fractionals
+                                                     (map - lower sample))]
+                               (/
+                                (dot-prod
+                                 fractionals'
+                                 (apply grad-gen sample))
+                                1)))
+                           samples)]
+        (loop [[curve & curves'] curves
+               grads gradients]
+          (let [groups (partition 2 grads)
+                grads' (map (partial apply linear-interpolation curve)
+                            groups)]
+            (if (seq curves')
+              (recur curves'
+                     grads')
+              (first grads'))))))))
 
 ;;; modifiers
 (defn scale [source & factors]
@@ -219,6 +244,10 @@
         ]
     (.getRGB (Color. j j j))))
 
+(def mini (atom nil))
+
+(def maxi (atom nil))
+
 (defn paint1d [generator width height &
                {:keys [file grid] :or {file "image.png"}}]
   {:pre [width height generator]}
@@ -239,10 +268,6 @@
         (.drawLine g2 x 0 x height))
       (.drawLine g2 0 (/ height 2) width (/ height 2)))
     (ImageIO/write image "png" (File. file))))
-
-(def mini (atom nil))
-
-(def maxi (atom nil))
 
 (defn paint2d [generator width height &
                {:keys [file grid] :or {file "image.png"}}]
