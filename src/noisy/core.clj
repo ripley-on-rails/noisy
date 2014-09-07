@@ -27,7 +27,6 @@
   ([seed]
      (let [hashing (Hashing/murmur3_32 seed)]
        (fn [& vals]
-(prn vals)
          (let [hasher (.newHasher hashing)]
            (doseq [val vals]
              (.putInt hasher val))
@@ -100,6 +99,18 @@
          v
          (- v)))))
 
+(def gradient-vectors [[1 1 0] [-1 1 0] [1 -1 0] [-1 -1 0]
+                       [1 0 1] [-1 0 1] [1 0 -1] [-1 0 -1]
+                       [0 1 1] [0 -1 1] [0 1 -1] [0 -1 -1]])
+
+(def grad-vector-length (math/sqrt 2))
+
+(def normalize-grad #(normalize %
+                                -2
+                                2
+                                -1
+                                1))
+
 ; ported from http://mrl.nyu.edu/~perlin/noise/
 (defn perlin2 [generator curve-fn]
   (fn [x y z]
@@ -112,7 +123,6 @@
           u (curve-fn x)
           v (curve-fn y)
           w (curve-fn z)
-_ (prn x')
           a (+ (p x') y')
           aa (+ (p a) z')
           ab (+ (p (inc a)) z')
@@ -124,8 +134,10 @@ _ (prn x')
        (linear-interpolation
         v
         (linear-interpolation u
+                              ;(generator x' y' z')
                               (grad (p aa) x y z)
-                              (grad (p ba) (dec x) y z))
+                              (grad (p ba) (dec x) y z)
+                              )
         (linear-interpolation u
                               (grad (p ab) x (dec y) z)
                               (grad (p bb) (dec x) (dec y) z)))
@@ -138,6 +150,18 @@ _ (prn x')
                               (grad (p (inc ab)) x (dec y) (dec z))
                               (grad (p (inc bb)) (dec x) (dec y) (dec z))))))))
 
+(defn min-max [v minimum maximum]
+  (min minimum (max maximum v)))
+
+(defn normalize [v src-min src-max dst-min dst-max]
+  (+ (/ (* (- v src-min)
+           (- dst-max dst-min))
+        (- src-max src-min))
+     dst-min))
+
+(defn dot-prod [a b]
+  (apply + (map * a b)))
+
 (defn perlin [generator curve-fn]
   (fn [& coords]
     (let [lower (map (comp int math/floor) coords)
@@ -149,7 +173,13 @@ _ (prn x')
           ; ([0 0 0] [1 0 0] [0 1 0] [1 1 0] [0 0 1] [1 0 1] [0 1 1] [1 1 1])
           ; therefore we can partion into 2 for each axis during
           ; the interpolation steps... pretty clever
-          gradients (map (partial apply generator) samples)
+          gradients (map (fn [sample]
+                           (normalize-grad
+                            (dot-prod
+                             fractionals
+                             (gradient-vectors
+                              (int (* 6 (inc (apply generator sample))))))))
+                         samples)
           ]
       (loop [[curve & curves'] curves
              grads gradients]
@@ -212,6 +242,8 @@ _ (prn x')
         g2 (.createGraphics image)]
     (doseq [x (range width)
             y (range height)]
+      (if (> (generator x y 0) 1)
+        (prn x y (generator x y 0)))
       (.setRGB image x y (gray (generator x y 0))))
     (when grid
       (.setColor g2 (Color. 255 128 0 128))
