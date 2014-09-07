@@ -5,7 +5,8 @@
            [javax.imageio ImageIO]
            [java.io File]
            [com.google.common.hash Hashing])
-  (:require [clojure.math.numeric-tower :as math]))
+  (:require [clojure.math.numeric-tower :as math]
+            [clojure.core.cache :as cache]))
 
 (defn- normalize-int [i]
   (cond
@@ -105,11 +106,26 @@
 
 (def grad-vector-length (math/sqrt 2))
 
+(defn normalize [v src-min src-max dst-min dst-max]
+  (+ (/ (* (- v src-min)
+           (- dst-max dst-min))
+        (- src-max src-min))
+     dst-min))
+
 (def normalize-grad #(normalize %
                                 -2
                                 2
                                 -1
                                 1))
+
+(defn make-cache-fn [source threshold]
+  (let [c (atom (cache/fifo-cache-factory {} :threshold threshold))]
+    (fn [& coords]
+      (if (cache/has? @c coords)
+        (cache/lookup @c coords)
+        (let [val (apply source coords)]
+          (swap! c assoc coords val)
+          val)))))
 
 ; ported from http://mrl.nyu.edu/~perlin/noise/
 (defn perlin2 [generator curve-fn]
@@ -153,12 +169,6 @@
 (defn min-max [v minimum maximum]
   (min minimum (max maximum v)))
 
-(defn normalize [v src-min src-max dst-min dst-max]
-  (+ (/ (* (- v src-min)
-           (- dst-max dst-min))
-        (- src-max src-min))
-     dst-min))
-
 (defn dot-prod [a b]
   (apply + (map * a b)))
 
@@ -174,11 +184,18 @@
           ; therefore we can partion into 2 for each axis during
           ; the interpolation steps... pretty clever
           gradients (map (fn [sample]
-                           (normalize-grad
-                            (dot-prod
-                             fractionals
-                             (gradient-vectors
-                              (int (* 6 (inc (apply generator sample))))))))
+                           (let [fractionals' (map +
+                                                   fractionals
+                                                   (map - lower sample))]
+;                             (prn fractionals' lower sample)
+ ;                            (prn (map - lower sample))
+;                             (normalize-grad)
+                             (/
+                              (dot-prod
+                               fractionals'
+                               (gradient-vectors
+                                (int (* 6 (inc (apply generator sample))))))
+                              1)))
                          samples)
           ]
       (loop [[curve & curves'] curves
@@ -212,7 +229,7 @@
 (defn- gray
   "Returns a gray-scale rgb representation given [-1.0, 1.0] as input"
   [i]
-  (let [j (int (* 128 (inc i)))
+  (let [j (int (normalize i -1 1 0 255))
 ;        j (mod (int i) 256)
         ]
     (.getRGB (Color. j j j))))
@@ -235,6 +252,10 @@
       (.drawLine g2 0 (/ height 2) width (/ height 2)))
     (ImageIO/write image "png" (File. file))))
 
+(def mini (atom nil))
+
+(def maxi (atom nil))
+
 (defn paint2d [generator width height &
                {:keys [file grid] :or {file "image.png"}}]
   {:pre [width height generator]}
@@ -242,8 +263,12 @@
         g2 (.createGraphics image)]
     (doseq [x (range width)
             y (range height)]
-      (if (> (generator x y 0) 1)
-        (prn x y (generator x y 0)))
+      (let [val (generator x y 0)]
+        (when (>= val 1)
+          (prn val)
+          (prn x y))
+        (reset! mini (if @mini (min @mini val) val))
+        (reset! maxi (if @maxi (max @maxi val) val)))
       (.setRGB image x y (gray (generator x y 0))))
     (when grid
       (.setColor g2 (Color. 255 128 0 128))
@@ -251,6 +276,7 @@
         (.drawLine g2 x 0 x height))
       (doseq [y (range 0 height grid)]
         (.drawLine g2 0 y width y)))
+    (prn [(double @mini) (double @maxi)])
     (ImageIO/write image "png" (File. file))))
 
 
