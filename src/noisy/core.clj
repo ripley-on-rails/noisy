@@ -30,6 +30,10 @@
              (.putInt hasher val))
            (.asInt (.hash hasher)))))))
 
+(defn murmur-noise [& {:keys [seed]
+                       :or {seed 0}}]
+  (comp normalize-int (murmur-prng seed)))
+
 (def gradient-vectors [[1 1 0] [-1 1 0] [1 -1 0] [-1 -1 0]
                        [1 0 1] [-1 0 1] [1 0 -1] [-1 0 -1]
                        [0 1 1] [0 -1 1] [0 1 -1] [0 -1 -1]])
@@ -136,7 +140,7 @@
             val))))))
 
 ; ported from http://mrl.nyu.edu/~perlin/noise/
-(defn perlin [& {:keys [curve-fn seed] :or {curve-fn fade2}}]
+(defn perlin-improved [& {:keys [curve-fn seed] :or {curve-fn fade2}}]
   (let [table (if seed
                 (permutation-table :seed seed)
                 p)]
@@ -179,7 +183,7 @@
 (defn dot-prod [a b]
   (apply + (map * a b)))
 
-(defn perlin-rnd [& opts]
+(defn perlin [& opts]
   (let [{:keys [curve-fn seed cache]
          :or {seed 0
               curve-fn fade2}} opts
@@ -290,17 +294,3 @@
       (doseq [y (range 0 height grid)]
         (.drawLine g2 0 y width y)))
     (ImageIO/write image "png" (File. file))))
-
-
-#_
-(
- (require '[noisy.core :as c])
- (c/paint (-> (c/murmur-random-generator)
-              (c/floor)
-              (c/scale 10))
-          200 200)
-
- (c/paint (-> (c/perlin (c/murmur-random-generator) c/fade1)
-              (c/scale 10))
-          200 200)
- )
