@@ -57,6 +57,8 @@ which is currently much slower than the classical perlin implementation:
 
 For the classical, improved perlin noise:
 
+
+```clojure
 (paint2d (-> (perlin)
              (scale 10)) 200 200)
 ```
