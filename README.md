@@ -45,13 +45,6 @@ TODO
 
 #### Generic example
 
-```clojure
-(paint2d (-> (perlin)
-             (scale 10)) 200 200)
-```
-
-![Perlin Noise](doc/perlin_noise.png)
-
 My perlin implementation that uses a murmur based gradient-generator
 which is currently much slower than the classical perlin implementation:
 
@@ -60,9 +53,15 @@ which is currently much slower than the classical perlin implementation:
              (scale 10)) 200 200)
 ```
 
-![Perlin Noise](doc/perlin_noise_improved.png)
+![Perlin Noise](doc/perlin_noise.png)
 
 For the classical, improved perlin noise:
+
+(paint2d (-> (perlin)
+             (scale 10)) 200 200)
+```
+
+![Perlin Noise](doc/perlin_noise_improved.png)
 
 ```clojure
 (paint1d (-> (perlin-improved)
