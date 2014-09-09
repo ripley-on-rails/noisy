@@ -59,14 +59,14 @@ For the classical, improved perlin noise:
 
 
 ```clojure
-(paint2d (-> (perlin)
+(paint2d (-> (perlin-improved)
              (scale 10)) 200 200)
 ```
 
 ![Perlin Noise](doc/perlin_noise_improved.png)
 
 ```clojure
-(paint1d (-> (perlin-improved)
+(paint1d (-> (perlin)
              (scale 40)) 400 100)
 ```
 
