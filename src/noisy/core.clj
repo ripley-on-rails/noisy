@@ -235,6 +235,16 @@
                   (repeat (first factors))
                   factors)))))
 
+(defn offset [source & offsets]
+  (fn [& coords]
+    {:pre [(or (= (count offsets)
+                  (count coords)))]}
+    (apply source (map +
+                       coords
+                       offsets))))
+
+; TODO rename this to smth that shows that we floor the coords
+; so this is a transformator and not a modifier!!!
 (defn floor [source]
   (fn [& coords]
     (apply source (map #(int (math/floor %)) coords))))
@@ -279,17 +289,20 @@
   (let [[c1 t1] (take 2 opts)
         transitions (partition 3 (drop 2 opts))]
     (fn [val]
-      (.getRGB
-       (if (> t1 val)
-         c1
-         (loop [c1 c1
-                t1 t1
-                [[interp c2 t2] & transitions'] transitions]
-           (if interp
-             (if (> val t2)
-               (recur c2 t2 transitions')
-               (interp (/ (- val t1) (- t2 t1)) c1 c2))
-             c1)))))))
+      (if (> t1 val)
+        c1
+        (loop [c1 c1
+               t1 t1
+               [[interp c2 t2] & transitions'] transitions]
+          (if interp
+            (if (> val t2)
+              (recur c2 t2 transitions')
+              (interp (/ (- val t1) (- t2 t1)) c1 c2))
+            c1))))))
+
+;; do I really need this? This is just a normal fn application
+(defn curve-modifier [source curve-fn]
+  (modify source curve-fn))
 
 
 
@@ -330,7 +343,7 @@
         (reset! maxi (if @maxi (max @maxi val) val)))
       (let [val (generator x y 0)
             color (if (instance? Color val)
-                    val
+                    (.getRGB val)
                     (gray val))]
         (.setRGB image x y color)))
     (when grid

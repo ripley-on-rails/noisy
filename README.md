@@ -137,6 +137,59 @@ For the classical, improved perlin noise:
 ```
 ![](doc/invert.png)
 
+### Modifier Examples
+
+```clojure
+(paint2d (-> (perlin :seed 1)
+             (scale 20)
+             (c/normalize-modifier -1 1 0 1)
+             (c/modify #(* % %))
+             (c/normalize-modifier 0 1))
+         200 200)
+```
+![](doc/squared.png)
+
+```clojure
+(paint2d (-> (perlin :seed 1)
+             (scale 40)
+             (c/modify #(mod % 0.1))
+             (c/normalize-modifier 0 0.1))
+         200 200)
+```
+![](doc/mod-1.png)
+
+```clojure
+(paint2d (-> (perlin :seed 1)
+             (scale 40)
+             (c/modify #(mod % 0.33))
+             (c/normalize-modifier 0 0.33)
+             (c/invert))
+         200 200)
+```
+![](doc/mod-2.png)
+
+```clojure
+(paint2d (-> (perlin :seed 1)
+             (scale 40)
+             (c/normalize-modifier -1 1 -5 5)
+             (c/modify math/floor)
+             (c/normalize-modifier -5 5))
+         200 200)
+```
+![](doc/layered.png)
+
+Pixelate for that special retro look:
+
+```clojure
+(paint2d (-> (perlin :seed 1)
+             (c/offset 0.5 0.5 0.5)
+             (scale 2)
+             (floor)
+             (scale 10))
+         200 200)
+```
+![](doc/pixeled_perlin.png)
+
 ## Utilities
 
 ### Grid & File export
