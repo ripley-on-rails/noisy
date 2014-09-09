@@ -125,6 +125,18 @@ For the classical, improved perlin noise:
 ```
 ![](doc/normalise.png)
 
+### Invert
+
+```clojure
+(paint2d (-> (perlin :seed 1)
+             (scale 20)
+             c/abs
+             (c/normalize-modifier 0 1)
+             c/invert)
+         200 200)
+```
+![](doc/invert.png)
+
 ## Utilities
 
 ### Grid & File export

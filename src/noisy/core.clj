@@ -259,6 +259,9 @@
 (defn abs [source]
   (modify source math/abs))
 
+(defn invert [source]
+  (modify source -))
+
 (defn normalize-modifier
   ([source min1 max1]
      (normalize-modifier source min1 max1 -1 1))
