@@ -251,9 +251,13 @@
 (defn color->rgba [c]
   [(.getRed c) (.getGreen c) (.getBlue c) (.getAlpha c)])
 
+;; Modifiers
 (defn modify [source f]
   (fn [& coords]
     (f (apply source coords))))
+
+(defn abs [source]
+  (modify source math/abs))
 
 (defn rgba-interpolation [v c1 c2]
   (apply #(Color. % %2 %3 %4)
@@ -276,6 +280,7 @@
                (recur c2 t2 transitions')
                (interp (/ (- val t1) (- t2 t1)) c1 c2))
              c1)))))))
+
 
 
 (def mini (atom nil))
@@ -313,7 +318,11 @@
       #_(let [val (generator x y 0)]
         (reset! mini (if @mini (min @mini val) val))
         (reset! maxi (if @maxi (max @maxi val) val)))
-      (.setRGB image x y (generator x y 0.5)))
+      (let [val (generator x y 0)
+            color (if (instance? Color val)
+                    val
+                    (gray val))]
+        (.setRGB image x y color)))
     (when grid
       (.setColor g2 (Color. 255 128 0 128))
       (doseq [x (range 0 width grid)]

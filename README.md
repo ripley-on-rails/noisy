@@ -104,6 +104,16 @@ For the classical, improved perlin noise:
 ```
 ![](doc/gradient_lava.png)
 
+### Absolute Value
+
+```clojure
+(paint2d (-> (perlin :seed 1)
+             (scale 20)
+             c/abs)
+         200 200)
+```
+![](doc/abs.png)
+
 ## Utilities
 
 ### Grid & File export
