@@ -114,6 +114,17 @@ For the classical, improved perlin noise:
 ```
 ![](doc/abs.png)
 
+### Normalisation
+
+```clojure
+(paint2d (-> (perlin :seed 1)
+             (scale 20)
+             c/abs
+             (c/normalize-modifier 0 1))
+         200 200)
+```
+![](doc/normalise.png)
+
 ## Utilities
 
 ### Grid & File export

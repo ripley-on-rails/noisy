@@ -259,6 +259,13 @@
 (defn abs [source]
   (modify source math/abs))
 
+(defn normalize-modifier
+  ([source min1 max1]
+     (normalize-modifier source min1 max1 -1 1))
+  ([source min1 max1 min2 max2]
+     (modify source
+             #(normalize % min1 max1 min2 max2))))
+
 (defn rgba-interpolation [v c1 c2]
   (apply #(Color. % %2 %3 %4)
          (map (comp int (partial linear-interpolation v))
