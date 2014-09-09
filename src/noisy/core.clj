@@ -248,6 +248,36 @@
         ]
     (.getRGB (Color. j j j))))
 
+(defn color->rgba [c]
+  [(.getRed c) (.getGreen c) (.getBlue c) (.getAlpha c)])
+
+(defn modify [source f]
+  (fn [& coords]
+    (f (apply source coords))))
+
+(defn rgba-interpolation [v c1 c2]
+  (apply #(Color. % %2 %3 %4)
+         (map (comp int (partial linear-interpolation v))
+              (color->rgba c1)
+              (color->rgba c2))))
+
+(defn gradient [& opts]
+  (let [[c1 t1] (take 2 opts)
+        transitions (partition 3 (drop 2 opts))]
+    (fn [val]
+      (.getRGB
+       (if (> t1 val)
+         c1
+         (loop [c1 c1
+                t1 t1
+                [[interp c2 t2] & transitions'] transitions]
+           (if interp
+             (if (> val t2)
+               (recur c2 t2 transitions')
+               (interp (/ (- val t1) (- t2 t1)) c1 c2))
+             c1)))))))
+
+
 (def mini (atom nil))
 
 (def maxi (atom nil))
@@ -281,12 +311,9 @@
     (doseq [x (range width)
             y (range height)]
       #_(let [val (generator x y 0)]
-        (when (>= val 1)
-          (prn val)
-          (prn x y))
         (reset! mini (if @mini (min @mini val) val))
         (reset! maxi (if @maxi (max @maxi val) val)))
-      (.setRGB image x y (gray (generator x y 0))))
+      (.setRGB image x y (generator x y 0.5)))
     (when grid
       (.setColor g2 (Color. 255 128 0 128))
       (doseq [x (range 0 width grid)]

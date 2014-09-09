@@ -90,6 +90,20 @@ For the classical, improved perlin noise:
 
 ![Perlin Noise using linear interpolation... Yikes!](doc/perlin_linear.png)
 
+## Modifiers
+
+### Gradients
+
+```clojure
+(paint2d (-> (perlin :seed 1)
+             (scale 20)
+             (c/modify (c/gradient Color/BLACK -0.7
+                                   c/rgba-interpolation Color/RED 0
+                                   c/rgba-interpolation Color/YELLOW 0.7)))
+         200 200)
+```
+![](doc/gradient_lava.png)
+
 ## Utilities
 
 ### Grid & File export
