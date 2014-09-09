@@ -190,6 +190,33 @@ Pixelate for that special retro look:
 ```
 ![](doc/pixeled_perlin.png)
 
+Fun with sinus:
+
+```clojure
+(paint2d (-> (perlin :seed 1)
+             (scale 40)
+             (c/modify #(Math/sin (* % 100))))
+         200 200)
+```
+![](doc/sinus-mod-1.png)
+
+```clojure
+(paint2d (-> (perlin :seed 1)
+             (scale 80)
+             (c/modify #(Math/sin (* % 300))))
+         200 200)
+```
+![](doc/sinus-mod-2.png)
+
+```clojure
+(paint2d (-> (perlin :seed 1)
+             (scale 40)
+             (c/modify #(Math/sin (* % 700))))
+         200 200)
+```
+![](doc/sinus-mod-3.png)
+
+
 ## Utilities
 
 ### Grid & File export
