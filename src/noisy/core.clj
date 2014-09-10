@@ -261,6 +261,20 @@
 (defn color->rgba [c]
   [(.getRed c) (.getGreen c) (.getBlue c) (.getAlpha c)])
 
+;; Combiner Modules
+(defn combine [f & sources]
+  (fn [& coords]
+    (apply f (map #(apply % coords) sources))))
+
+(defn combine-max [& sources]
+  (apply combine max sources))
+
+(defn combine-min [& sources]
+  (apply combine min sources))
+
+(defn combine-add [& sources]
+  (apply combine + sources))
+
 ;; Modifiers
 (defn modify [source f]
   (fn [& coords]
