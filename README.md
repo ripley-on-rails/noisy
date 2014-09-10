@@ -250,9 +250,15 @@ Fun with sinus:
 ![](doc/grid1d.png)
 
 ## TODOs
+ - Add combinators
+ - Add turbulence
+ - Add selector modules
+ - Structure modules
+ - Create wiki
+ - Move examples to wiki
+ - Code cleanup and structure features and concepts
  - Add caching middleware
  - Add tiling
- - Add offset
  - Add paint3d:
    - export depth many images
    - export to animated GIF(?)
