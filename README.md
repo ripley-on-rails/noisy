@@ -216,6 +216,20 @@ Fun with sinus:
 ```
 ![](doc/sinus-mod-3.png)
 
+```clojure
+(paint2d (-> (perlin :seed 1)
+             (scale 40)
+             ((fn [s]
+                 (fn [& coords]
+                     (apply s
+                            (+ (first coords)
+                                 (Math/sin (* 0.3 (second coords))))
+                            (+ (second coords)
+                                 (Math/sin (* 0.3 (first coords))))
+                            (drop 2 coords))))))
+               200 200)
+```
+![](doc/sinus-mod-4.png)
 
 ## Utilities
 
