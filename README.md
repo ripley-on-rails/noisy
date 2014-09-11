@@ -231,6 +231,18 @@ Fun with sinus:
 ```
 ![](doc/sinus-mod-4.png)
 
+## Combiner Modules
+
+```clojure
+(paint2d (-> (c/combine-add (-> (perlin :seed 4)
+                                      (scale 20))
+                                  (-> (perlin :seed 1)
+                                      (scale 20)))
+                   (c/normalize-modifier -2 2))
+               200 200)
+```
+
+
 ## Utilities
 
 ### Grid & File export
@@ -250,7 +262,7 @@ Fun with sinus:
 ![](doc/grid1d.png)
 
 ## TODOs
- - Add combinators
+ - Add combinators/Control Modules
  - Add turbulence
  - Add selector modules
  - Structure modules
