@@ -262,7 +262,6 @@ Fun with sinus:
 ![](doc/grid1d.png)
 
 ## TODOs
- - Add combinators/Control Modules
  - Add turbulence
  - Add selector modules
  - Structure modules
