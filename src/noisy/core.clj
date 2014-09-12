@@ -275,6 +275,26 @@
 (defn combine-add [& sources]
   (apply combine + sources))
 
+(defn fractal-noise
+  [& {:keys [noise-gen octaves persistence lacunarity seed-fn]
+      :or {persistence 1/2
+           lacunarity 2
+           noise-gen perlin}}]
+  {:pre [(> octaves 0)]}
+  (let [seed-fn (or seed-fn
+                    identity)
+        max-amp (/ (math/expt (- 1 persistence) octaves)
+                   (- 1 persistence))]
+    (loop [n-gen (perlin :seed (seed-fn 0))
+           i octaves]
+      (if (zero? i)
+        (normalize-modifier n-gen (- max-amp) max-amp)
+        (let [n-gen' (-> (noise-gen :seed (seed-fn i))
+                         (scale lacunarity)
+                         (normalize-modifier -1 0 (- persistence) persistence))]
+          (recur (-> (combine-add n-gen n-gen'))
+                 (dec i)))))))
+
 ;; Modifiers
 (defn modify [source f]
   (fn [& coords]
@@ -356,6 +376,7 @@
         (reset! mini (if @mini (min @mini val) val))
         (reset! maxi (if @maxi (max @maxi val) val)))
       (let [val (generator x y 0)
+            _ (prn [val x y])
             color (if (instance? Color val)
                     (.getRGB val)
                     (gray val))]
