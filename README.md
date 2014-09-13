@@ -231,13 +231,27 @@ Fun with sinus:
 ```
 ![](doc/sinus-mod-4.png)
 
+## Fractal noise
+
+```clojure
+(paint2d (-> (c/fractal-noise :octaves 3
+                              :persistence 3/4
+                              :lacunarity 3/2)
+             (scale 25))
+         200 200)
+```
+
+![](doc/fractal_perlin.png)
+
 ## Combiner Modules
+
+TODO
 
 ```clojure
 (paint2d (-> (c/combine-add (-> (perlin :seed 4)
-                                      (scale 20))
-                                  (-> (perlin :seed 1)
-                                      (scale 20)))
+                                (scale 20))
+                                (-> (perlin :seed 1)
+                                (scale 20)))
                    (c/normalize-modifier -2 2))
                200 200)
 ```
