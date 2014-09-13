@@ -283,15 +283,18 @@
   {:pre [(> octaves 0)]}
   (let [seed-fn (or seed-fn
                     identity)
-        max-amp (/ (math/expt (- 1 persistence) octaves)
-                   (- 1 persistence))]
+        max-amp (if (= 1 persistence)
+                  octaves
+                  (/ (- (math/expt persistence octaves) 1)
+                     (- persistence 1)))]
+;    (prn "max-amp" max-amp)
     (loop [n-gen (perlin :seed (seed-fn 0))
            i octaves]
       (if (zero? i)
         (normalize-modifier n-gen (- max-amp) max-amp)
         (let [n-gen' (-> (noise-gen :seed (seed-fn i))
                          (scale lacunarity)
-                         (normalize-modifier -1 0 (- persistence) persistence))]
+                         (modify (partial * persistence)))]
           (recur (-> (combine-add n-gen n-gen'))
                  (dec i)))))))
 
@@ -376,7 +379,7 @@
         (reset! mini (if @mini (min @mini val) val))
         (reset! maxi (if @maxi (max @maxi val) val)))
       (let [val (generator x y 0)
-            _ (prn [val x y])
+;            _ (prn [val x y])
             color (if (instance? Color val)
                     (.getRGB val)
                     (gray val))]
