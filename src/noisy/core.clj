@@ -275,24 +275,23 @@
 (defn combine-add [& sources]
   (apply combine + sources))
 
+
 (defn fractal-noise
-  [& {:keys [noise-gen octaves persistence lacunarity seed-fn]
+  [& {:keys [noise-gen octaves persistence lacunarity]
       :or {persistence 1/2
            lacunarity 2
-           noise-gen perlin}}]
+           noise-gen (perlin)}}]
   {:pre [(> octaves 0)]}
-  (let [seed-fn (or seed-fn
-                    identity)
-        max-amp (if (= 1 persistence)
+  (let [max-amp (if (= 1 persistence)
                   octaves
                   (/ (- (math/expt persistence octaves) 1)
                      (- persistence 1)))]
 ;    (prn "max-amp" max-amp)
-    (loop [n-gen (perlin :seed (seed-fn 0))
+    (loop [n-gen noise-gen
            i octaves]
       (if (zero? i)
         (normalize-modifier n-gen (- max-amp) max-amp)
-        (let [n-gen' (-> (noise-gen :seed (seed-fn i))
+        (let [n-gen' (-> noise-gen
                          (scale lacunarity)
                          (modify (partial * persistence)))]
           (recur (-> (combine-add n-gen n-gen'))
